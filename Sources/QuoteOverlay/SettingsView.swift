@@ -140,6 +140,7 @@ private struct QuotesTab: View {
 
 private struct AppearanceTab: View {
     @ObservedObject var store: QuoteStore
+    @State private var confirmingReset = false
 
     var body: some View {
         Form {
@@ -172,7 +173,18 @@ private struct AppearanceTab: View {
                 Toggle("Serif font", isOn: $store.serif)
                 Toggle("Dark text (for light wallpapers)", isOn: $store.darkText)
             }
+            Section {
+                Button("Reset All Settings…", role: .destructive) { confirmingReset = true }
+            } footer: {
+                Text("Restores position, size, opacity, font and rotation. Your quotes and pictures are kept.")
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
+        .confirmationDialog("Reset all settings to their defaults?", isPresented: $confirmingReset) {
+            Button("Reset", role: .destructive) { store.resetSettings() }
+        } message: {
+            Text("Your quotes and pictures won't be touched.")
+        }
     }
 }

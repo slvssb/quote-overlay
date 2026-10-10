@@ -38,22 +38,22 @@ final class QuoteStore: ObservableObject {
     @Published var currentIndex: Int { didSet { defaults.set(currentIndex, forKey: "currentIndex") } }
     @Published var isVisible: Bool { didSet { defaults.set(isVisible, forKey: "isVisible") } }
 
-    @Published var rotation: RotationInterval { didSet { defaults.set(rotation.rawValue, forKey: "rotation") } }
-    @Published var shuffle: Bool { didSet { defaults.set(shuffle, forKey: "shuffle") } }
+    @Published var rotation: RotationInterval = .hourly { didSet { defaults.set(rotation.rawValue, forKey: "rotation") } }
+    @Published var shuffle = false { didSet { defaults.set(shuffle, forKey: "shuffle") } }
 
     /// Where the quote's center sits, as a fraction of the screen (0...1, top-left origin).
-    @Published var anchor: CGPoint {
+    @Published var anchor = CGPoint(x: 0.5, y: 0.5) {
         didSet { defaults.set(anchor.x, forKey: "anchorX"); defaults.set(anchor.y, forKey: "anchorY") }
     }
     /// While true, the overlay floats above windows and can be dragged and resized.
     @Published var isArranging = false
-    @Published var fontSize: Double { didSet { defaults.set(fontSize, forKey: "fontSize") } }
-    @Published var serif: Bool { didSet { defaults.set(serif, forKey: "serif") } }
-    @Published var textOpacity: Double { didSet { defaults.set(textOpacity, forKey: "textOpacity") } }
-    @Published var darkText: Bool { didSet { defaults.set(darkText, forKey: "darkText") } }
+    @Published var fontSize = 36.0 { didSet { defaults.set(fontSize, forKey: "fontSize") } }
+    @Published var serif = true { didSet { defaults.set(serif, forKey: "serif") } }
+    @Published var textOpacity = 0.9 { didSet { defaults.set(textOpacity, forKey: "textOpacity") } }
+    @Published var darkText = false { didSet { defaults.set(darkText, forKey: "darkText") } }
 
     private let defaults = UserDefaults.standard
-    @Published var imageScale: Double { didSet { defaults.set(imageScale, forKey: "imageScale") } }
+    @Published var imageScale = 0.35 { didSet { defaults.set(imageScale, forKey: "imageScale") } }
 
     private let fileURL: URL
     private let imagesDir: URL
@@ -74,13 +74,27 @@ final class QuoteStore: ObservableObject {
             quotes = [Quote(text: "you should be more ambitious\nway more ambitious", author: "lauren (@poteto)")]
         }
 
-        defaults.register(defaults: [
-            "isVisible": true, "rotation": RotationInterval.hourly.rawValue, "shuffle": false,
-            "anchorX": 0.5, "anchorY": 0.5, "fontSize": 36.0, "serif": true,
-            "textOpacity": 0.9, "darkText": false, "imageScale": 0.35,
-        ])
+        defaults.register(defaults: ["isVisible": true].merging(Self.settingDefaults) { $1 })
         currentIndex = defaults.integer(forKey: "currentIndex")
         isVisible = defaults.bool(forKey: "isVisible")
+        loadSettings()
+        clampIndex()
+    }
+
+    /// Appearance and rotation settings that "Reset All Settings" restores.
+    /// Quotes, pictures, the current quote and Show Quote are not part of this.
+    private static let settingDefaults: [String: Any] = [
+        "rotation": RotationInterval.hourly.rawValue, "shuffle": false,
+        "anchorX": 0.5, "anchorY": 0.5, "fontSize": 36.0, "serif": true,
+        "textOpacity": 0.9, "darkText": false, "imageScale": 0.35,
+    ]
+
+    func resetSettings() {
+        Self.settingDefaults.keys.forEach(defaults.removeObject(forKey:))
+        loadSettings()
+    }
+
+    private func loadSettings() {
         rotation = RotationInterval(rawValue: defaults.integer(forKey: "rotation")) ?? .hourly
         shuffle = defaults.bool(forKey: "shuffle")
         anchor = CGPoint(x: defaults.double(forKey: "anchorX"), y: defaults.double(forKey: "anchorY"))
@@ -89,7 +103,6 @@ final class QuoteStore: ObservableObject {
         textOpacity = defaults.double(forKey: "textOpacity")
         darkText = defaults.bool(forKey: "darkText")
         imageScale = defaults.double(forKey: "imageScale")
-        clampIndex()
     }
 
     var currentQuote: Quote? {
