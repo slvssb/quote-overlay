@@ -25,6 +25,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         overlay = OverlayController(store: store)
+        enableLaunchAtLoginOnFirstInstall()
+    }
+
+    /// The first time the installed copy runs, turn on Launch at Login so it survives a restart.
+    /// Dev builds (run from the project folder) are left alone. The menu toggle can turn it off.
+    private func enableLaunchAtLoginOnFirstInstall() {
+        let key = "didAutoEnableLaunchAtLogin"
+        let path = Bundle.main.bundlePath
+        let installed = path.hasPrefix("/Applications/") || path.hasPrefix(NSHomeDirectory() + "/Applications/")
+        guard installed, !UserDefaults.standard.bool(forKey: key) else { return }
+        do {
+            try SMAppService.mainApp.register()
+            UserDefaults.standard.set(true, forKey: key)
+        } catch {
+            NSLog("Couldn't enable launch at login: \(error)")
+        }
     }
 }
 

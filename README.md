@@ -4,7 +4,15 @@ Menu bar app that shows a quote (text or a picture) on top of your wallpaper,
 without changing the wallpaper. It sits behind every window, ignores clicks, and
 is hidden in Mission Control.
 
-## Build & run
+## Install
+
+    ./scripts/install.sh
+
+Builds the app, copies it to `~/Applications/QuoteOverlay.app` and launches it.
+On first launch the installed copy turns on Launch at Login, so it comes back
+after a restart (turn it off from the menu bar). Re-run the script after changes.
+
+## Dev build
 
     ./scripts/bundle.sh
     open QuoteOverlay.app
