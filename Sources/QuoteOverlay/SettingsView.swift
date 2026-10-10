@@ -161,14 +161,14 @@ private struct AppearanceTab: View {
             }
             Section("Pictures") {
                 SettingRow("Max size", store: store, keys: ["imageScale"]) {
-                    Slider(value: $store.imageScale, in: 0.15...0.6) {
+                    Slider(value: $store.imageScale, in: QuoteView.imageScaleRange) {
                         EmptyView()
                     } minimumValueLabel: { Text("Small") } maximumValueLabel: { Text("Large") }
                 }
             }
             Section("Text") {
                 SettingRow("Size", store: store, keys: ["fontSize"]) {
-                    Slider(value: $store.fontSize, in: 16...96, step: 2)
+                    Slider(value: $store.fontSize, in: QuoteView.fontSizeRange, step: 2)
                 }
                 SettingRow("Opacity", store: store, keys: ["textOpacity"]) {
                     Slider(value: $store.textOpacity, in: 0.2...1)
