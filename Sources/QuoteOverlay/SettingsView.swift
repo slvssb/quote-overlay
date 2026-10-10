@@ -145,33 +145,40 @@ private struct AppearanceTab: View {
     var body: some View {
         Form {
             Section("Placement") {
-                HStack {
+                SettingRow("Position", store: store, keys: ["anchorX", "anchorY"]) {
                     Button("Arrange on Screen…") { store.isArranging = true }
-                    Button("Reset to Center") { store.anchor = CGPoint(x: 0.5, y: 0.5) }
                 }
             }
             Section("Rotation") {
-                Picker("Change quote", selection: $store.rotation) {
-                    ForEach(RotationInterval.allCases) { Text($0.label).tag($0) }
+                SettingRow("Change quote", store: store, keys: ["rotation"]) {
+                    Picker("Change quote", selection: $store.rotation) {
+                        ForEach(RotationInterval.allCases) { Text($0.label).tag($0) }
+                    }
                 }
-                Toggle("Shuffle", isOn: $store.shuffle)
+                SettingRow("Shuffle", store: store, keys: ["shuffle"]) {
+                    Toggle("Shuffle", isOn: $store.shuffle)
+                }
             }
             Section("Pictures") {
-                LabeledContent("Max size") {
+                SettingRow("Max size", store: store, keys: ["imageScale"]) {
                     Slider(value: $store.imageScale, in: 0.15...0.6) {
                         EmptyView()
                     } minimumValueLabel: { Text("Small") } maximumValueLabel: { Text("Large") }
                 }
             }
             Section("Text") {
-                LabeledContent("Size") {
+                SettingRow("Size", store: store, keys: ["fontSize"]) {
                     Slider(value: $store.fontSize, in: 16...96, step: 2)
                 }
-                LabeledContent("Opacity") {
+                SettingRow("Opacity", store: store, keys: ["textOpacity"]) {
                     Slider(value: $store.textOpacity, in: 0.2...1)
                 }
-                Toggle("Serif font", isOn: $store.serif)
-                Toggle("Dark text (for light wallpapers)", isOn: $store.darkText)
+                SettingRow("Serif font", store: store, keys: ["serif"]) {
+                    Toggle("Serif font", isOn: $store.serif)
+                }
+                SettingRow("Dark text (for light wallpapers)", store: store, keys: ["darkText"]) {
+                    Toggle("Dark text", isOn: $store.darkText)
+                }
             }
             Section {
                 Button("Reset All Settings…", role: .destructive) { confirmingReset = true }
@@ -185,6 +192,41 @@ private struct AppearanceTab: View {
             Button("Reset", role: .destructive) { store.resetSettings() }
         } message: {
             Text("Your quotes and pictures won't be touched.")
+        }
+    }
+}
+
+/// A labeled setting with a reset arrow that appears once it differs from the default.
+private struct SettingRow<Control: View>: View {
+    let title: String
+    @ObservedObject var store: QuoteStore
+    let keys: [String]
+    @ViewBuilder let control: Control
+
+    init(_ title: String, store: QuoteStore, keys: [String], @ViewBuilder control: () -> Control) {
+        self.title = title
+        self.store = store
+        self.keys = keys
+        self.control = control()
+    }
+
+    var body: some View {
+        let isDefault = store.isDefault(keys)
+        LabeledContent {
+            control.labelsHidden()
+        } label: {
+            HStack(spacing: 6) {
+                Text(title)
+                Button {
+                    store.resetSettings(keys)
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Reset to default")
+                .opacity(isDefault ? 0 : 1)
+                .disabled(isDefault)
+            }
         }
     }
 }

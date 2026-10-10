@@ -90,8 +90,20 @@ final class QuoteStore: ObservableObject {
     ]
 
     func resetSettings() {
-        Self.settingDefaults.keys.forEach(defaults.removeObject(forKey:))
+        resetSettings(Array(Self.settingDefaults.keys))
+    }
+
+    /// Restores just these settings (UserDefaults keys) to their defaults.
+    func resetSettings(_ keys: [String]) {
+        keys.forEach(defaults.removeObject(forKey:))
         loadSettings()
+    }
+
+    func isDefault(_ keys: [String]) -> Bool {
+        keys.allSatisfy { key in
+            guard let current = defaults.object(forKey: key) as? NSObject else { return true }
+            return current.isEqual(Self.settingDefaults[key])
+        }
     }
 
     private func loadSettings() {
